@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import LogoutButton from '@/components/ui/LogoutButton'
 
 export default function DashboardLayout({
   children
@@ -36,11 +37,7 @@ export default function DashboardLayout({
 
         {/* Bas de sidebar */}
         <div className="p-3 border-t border-gray-200">
-          <button
-            className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-500 hover:bg-gray-100 transition-colors"
-          >
-            Déconnexion
-          </button>
+          <LogoutButton />
         </div>
       </aside>
 

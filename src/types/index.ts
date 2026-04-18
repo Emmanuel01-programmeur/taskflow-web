@@ -5,7 +5,7 @@ export interface User {
    created_at : string
 }
 
-export interface project {
+export interface Project {
    id: string 
    title : string
    description : string | null 
