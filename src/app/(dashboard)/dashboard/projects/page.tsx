@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Project } from '@/types'
 
@@ -105,7 +106,12 @@ export default function ProjectsPage() {
               className="bg-white border border-gray-200 rounded-xl p-5 hover:border-teal-300 transition-colors"
             >
               <div className="flex items-start justify-between mb-2">
-                <h3 className="font-medium text-gray-900">{project.title}</h3>
+                <Link
+                  href={`/dashboard/projects/${project.id}`}
+                  className="font-medium text-gray-900 hover:text-teal-600 transition-colors"
+                >
+                  {project.title}
+                </Link>
                 <div className="flex items-center gap-2">
                   <span className="text-xs bg-teal-50 text-teal-700 px-2 py-1 rounded-full">
                     {project.status}

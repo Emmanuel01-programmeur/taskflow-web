@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import Link from 'next/link'
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
@@ -76,9 +77,10 @@ export default async function DashboardPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {recentProjects.map((project) => (
-              <div
+              <Link
                 key={project.id}
-                className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                href={`/dashboard/projects/${project.id}`}
+                className="bg-white border border-gray-200 rounded-xl p-5 hover:border-teal-300 transition-colors block"
               >
                 <div>
                   <p className="text-sm font-medium text-gray-900">
@@ -93,7 +95,7 @@ export default async function DashboardPage() {
                 <span className="text-xs bg-teal-50 text-teal-700 px-2 py-1 rounded-full">
                   {project.status}
                 </span>
-              </div>
+              </Link>
             ))}
           </div>
         )}

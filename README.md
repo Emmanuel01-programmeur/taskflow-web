@@ -34,3 +34,4 @@ src/
 - [ ] Google Auth
 - [ ] GitHub Auth
 - [ ] Resend (emails prod)
+- [ ] Vue d'ensemble temps réel

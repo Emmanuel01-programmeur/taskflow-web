@@ -14,7 +14,7 @@ export interface Project {
    created_at : string
 }
 
-export interface task {
+export interface Task {
    id: string
    title : string
    status : 'todo' | 'in_progress' | 'done'
