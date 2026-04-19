@@ -11,6 +11,10 @@ export default function ProjectsPage() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
+  const [editingProject, setEditingProject] = useState<Project | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editDescription, setEditDescription] = useState('')
+  const [editStatus, setEditStatus] = useState<'active' | 'completed' | 'archived'>('active')
 
   useEffect(() => {
     fetchProjects()
@@ -26,7 +30,6 @@ export default function ProjectsPage() {
       console.error('Erreur:', error)
       return
     }
-
     setProjects(data || [])
   }
 
@@ -62,6 +65,33 @@ export default function ProjectsPage() {
     fetchProjects()
   }
 
+  async function handleUpdateProject() {
+    if (!editingProject) return
+    setLoading(true)
+
+    const { error } = await supabase
+      .from('projects')
+      .update({
+        title: editTitle,
+        description: editDescription,
+        status: editStatus
+      })
+      .eq('id', editingProject.id)
+
+    if (error) {
+      console.error('Erreur:', error)
+      setLoading(false)
+      return
+    }
+
+    setEditingProject(null)
+    setEditTitle('')
+    setEditDescription('')
+    setEditStatus('active')
+    setLoading(false)
+    fetchProjects()
+  }
+
   async function handleDeleteProject(id: string) {
     const { error } = await supabase
       .from('projects')
@@ -72,13 +102,23 @@ export default function ProjectsPage() {
       console.error('Erreur suppression:', error)
       return
     }
-
     fetchProjects()
+  }
+
+  const statusColors = {
+    active: 'bg-teal-50 text-teal-700',
+    completed: 'bg-teal-100 text-teal-800',
+    archived: 'bg-gray-100 text-gray-500'
+  }
+
+  const statusLabels = {
+    active: 'Actif',
+    completed: 'Terminé',
+    archived: 'Archivé'
   }
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">
           Projets
@@ -91,7 +131,6 @@ export default function ProjectsPage() {
         </button>
       </div>
 
-      {/* Liste des projets */}
       {projects.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
           <p className="text-gray-400 text-sm">
@@ -112,38 +151,48 @@ export default function ProjectsPage() {
                 >
                   {project.title}
                 </Link>
+                <span className={`text-xs px-2 py-1 rounded-full ${statusColors[project.status as keyof typeof statusColors]}`}>
+                  {statusLabels[project.status as keyof typeof statusLabels]}
+                </span>
+              </div>
+              {project.description && (
+                <p className="text-sm text-gray-500 mb-3">{project.description}</p>
+              )}
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-400">
+                  {new Date(project.created_at).toLocaleDateString('fr-FR')}
+                </p>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs bg-teal-50 text-teal-700 px-2 py-1 rounded-full">
-                    {project.status}
-                  </span>
+                  <button
+                    onClick={() => {
+                      setEditingProject(project)
+                      setEditTitle(project.title)
+                      setEditDescription(project.description || '')
+                      setEditStatus(project.status as 'active' | 'completed' | 'archived')
+                    }}
+                    className="text-xs bg-teal-50 text-teal-600 px-2 py-1 rounded hover:bg-teal-100 transition-colors"
+                  >
+                    Modifier
+                  </button>
                   <button
                     onClick={() => handleDeleteProject(project.id)}
-                    className="text-xs text-red-400 hover:text-red-600 transition-colors"
+                    className="text-xs bg-red-50 text-red-400 px-2 py-1 rounded hover:bg-red-100 transition-colors"
                   >
                     Supprimer
                   </button>
                 </div>
               </div>
-              {project.description && (
-                <p className="text-sm text-gray-500">{project.description}</p>
-              )}
-              <p className="text-xs text-gray-400 mt-3">
-                {new Date(project.created_at).toLocaleDateString('fr-FR')}
-              </p>
             </div>
           ))}
         </div>
       )}
 
-      {/* Modal création projet */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl border border-gray-200 p-6 w-full max-w-md">
-
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Nouveau projet
             </h2>
-
             <div className="flex flex-col gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-800 mb-1 block">
@@ -157,7 +206,6 @@ export default function ProjectsPage() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-teal-500 text-gray-900 placeholder:text-gray-400"
                 />
               </div>
-
               <div>
                 <label className="text-sm font-medium text-gray-800 mb-1 block">
                   Description
@@ -170,7 +218,6 @@ export default function ProjectsPage() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-teal-500 text-gray-900 placeholder:text-gray-400 resize-none"
                 />
               </div>
-
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={() => {
@@ -188,6 +235,69 @@ export default function ProjectsPage() {
                   className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 disabled:opacity-50 transition-colors"
                 >
                   {loading ? 'Création...' : 'Créer'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingProject && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl border border-gray-200 p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Modifier le projet
+            </h2>
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-800 mb-1 block">
+                  Nom du projet
+                </label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-teal-500 text-gray-900"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-800 mb-1 block">
+                  Description
+                </label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={3}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-teal-500 text-gray-900 resize-none"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-800 mb-1 block">
+                  Statut
+                </label>
+                <select
+                  value={editStatus}
+                  onChange={(e) => setEditStatus(e.target.value as 'active' | 'completed' | 'archived')}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-teal-500 text-gray-900"
+                >
+                  <option value="active">Actif</option>
+                  <option value="completed">Terminé</option>
+                  <option value="archived">Archivé</option>
+                </select>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setEditingProject(null)}
+                  className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleUpdateProject}
+                  disabled={!editTitle || loading}
+                  className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 disabled:opacity-50 transition-colors"
+                >
+                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
                 </button>
               </div>
             </div>

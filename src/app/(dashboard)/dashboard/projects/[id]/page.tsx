@@ -12,15 +12,21 @@ const COLUMNS = [
 ] as const
 
 export default function ProjectDetailPage() {
-  const { id } = useParams()
+  const params = useParams()
+  const id = Array.isArray(params.id) ? params.id[0] : params.id
+
   const [project, setProject] = useState<Project | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
   const [showModal, setShowModal] = useState(false)
   const [newTaskTitle, setNewTaskTitle] = useState('')
   const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('medium')
   const [loading, setLoading] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [editTitle, setEditTitle] = useState('')
+  const [editPriority, setEditPriority] = useState<'low' | 'medium' | 'high'>('medium')
 
   useEffect(() => {
+    if (!id) return
     fetchProject()
     fetchTasks()
   }, [id])
@@ -31,7 +37,6 @@ export default function ProjectDetailPage() {
       .select('*')
       .eq('id', id)
       .single()
-
     setProject(data)
   }
 
@@ -46,7 +51,6 @@ export default function ProjectDetailPage() {
       console.error('Erreur:', error)
       return
     }
-
     setTasks(data || [])
   }
 
@@ -75,6 +79,31 @@ export default function ProjectDetailPage() {
     fetchTasks()
   }
 
+  async function handleUpdateTask() {
+    if (!editingTask) return
+    setLoading(true)
+
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        title: editTitle,
+        priority: editPriority
+      })
+      .eq('id', editingTask.id)
+
+    if (error) {
+      console.error('Erreur:', error)
+      setLoading(false)
+      return
+    }
+
+    setEditingTask(null)
+    setEditTitle('')
+    setEditPriority('medium')
+    setLoading(false)
+    fetchTasks()
+  }
+
   async function handleMoveTask(taskId: string, newStatus: 'todo' | 'in_progress' | 'done') {
     const { error } = await supabase
       .from('tasks')
@@ -85,7 +114,6 @@ export default function ProjectDetailPage() {
       console.error('Erreur:', error)
       return
     }
-
     fetchTasks()
   }
 
@@ -99,7 +127,6 @@ export default function ProjectDetailPage() {
       console.error('Erreur:', error)
       return
     }
-
     fetchTasks()
   }
 
@@ -117,7 +144,6 @@ export default function ProjectDetailPage() {
 
   return (
     <div>
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">
@@ -135,17 +161,12 @@ export default function ProjectDetailPage() {
         </button>
       </div>
 
-      {/* Kanban */}
       <div className="grid grid-cols-3 gap-4">
         {COLUMNS.map((column) => {
           const columnTasks = tasks.filter(t => t.status === column.id)
 
           return (
-            <div
-              key={column.id}
-              className="bg-gray-50 rounded-xl p-4"
-            >
-              {/* Header colonne */}
+            <div key={column.id} className="bg-gray-50 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-medium text-gray-700">
                   {column.label}
@@ -155,7 +176,6 @@ export default function ProjectDetailPage() {
                 </span>
               </div>
 
-              {/* Tâches */}
               <div className="flex flex-col gap-2">
                 {columnTasks.length === 0 && (
                   <p className="text-xs text-gray-400 text-center py-4">
@@ -169,14 +189,11 @@ export default function ProjectDetailPage() {
                   >
                     <p className="text-sm text-gray-900 mb-2">{task.title}</p>
 
-                    {/* Badge priorité */}
                     <div className="flex items-center justify-between">
                       <span className={`text-xs px-2 py-0.5 rounded-full ${priorityColors[task.priority]}`}>
                         {priorityLabels[task.priority]}
                       </span>
 
-                      {/* Actions déplacer */}
-                      {/* Actions déplacer */}
                       <div className="flex items-center gap-1">
                         {column.id !== 'todo' && (
                           <button
@@ -201,8 +218,18 @@ export default function ProjectDetailPage() {
                           </button>
                         )}
                         <button
+                          onClick={() => {
+                            setEditingTask(task)
+                            setEditTitle(task.title)
+                            setEditPriority(task.priority)
+                          }}
+                          className="text-xs bg-teal-50 text-teal-600 px-2 py-1 rounded hover:bg-teal-100 transition-colors"
+                        >
+                          Modifier
+                        </button>
+                        <button
                           onClick={() => handleDeleteTask(task.id)}
-                          className="text-xs bg-red-50 text-red-400 px-2 py-1 rounded hover:bg-red-100 transition-colors ml-1"
+                          className="text-xs bg-red-50 text-red-400 px-2 py-1 rounded hover:bg-red-100 transition-colors"
                         >
                           ✕
                         </button>
@@ -216,15 +243,12 @@ export default function ProjectDetailPage() {
         })}
       </div>
 
-      {/* Modal nouvelle tâche */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl border border-gray-200 p-6 w-full max-w-md">
-
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Nouvelle tâche
             </h2>
-
             <div className="flex flex-col gap-4">
               <div>
                 <label className="text-sm font-medium text-gray-800 mb-1 block">
@@ -238,7 +262,6 @@ export default function ProjectDetailPage() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-teal-500 text-gray-900 placeholder:text-gray-400"
                 />
               </div>
-
               <div>
                 <label className="text-sm font-medium text-gray-800 mb-1 block">
                   Priorité
@@ -253,7 +276,6 @@ export default function ProjectDetailPage() {
                   <option value="high">Élevé</option>
                 </select>
               </div>
-
               <div className="flex gap-3 justify-end">
                 <button
                   onClick={() => {
@@ -271,6 +293,58 @@ export default function ProjectDetailPage() {
                   className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 disabled:opacity-50 transition-colors"
                 >
                   {loading ? 'Création...' : 'Créer'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editingTask && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl border border-gray-200 p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Modifier la tâche
+            </h2>
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-800 mb-1 block">
+                  Titre
+                </label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-teal-500 text-gray-900"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-800 mb-1 block">
+                  Priorité
+                </label>
+                <select
+                  value={editPriority}
+                  onChange={(e) => setEditPriority(e.target.value as 'low' | 'medium' | 'high')}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-teal-500 text-gray-900"
+                >
+                  <option value="low">Faible</option>
+                  <option value="medium">Moyen</option>
+                  <option value="high">Élevé</option>
+                </select>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setEditingTask(null)}
+                  className="px-4 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={handleUpdateTask}
+                  disabled={!editTitle || loading}
+                  className="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 disabled:opacity-50 transition-colors"
+                >
+                  {loading ? 'Sauvegarde...' : 'Sauvegarder'}
                 </button>
               </div>
             </div>

@@ -17,17 +17,14 @@ export default async function DashboardPage() {
     }
   )
 
-  // Récupérer l'utilisateur connecté
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Récupérer les projets
   const { data: projects } = await supabase
     .from('projects')
     .select('*')
     .eq('user_id', user?.id)
     .order('created_at', { ascending: false })
 
-  // Récupérer les tâches
   const { data: tasks } = await supabase
     .from('tasks')
     .select('*')
@@ -43,7 +40,6 @@ export default async function DashboardPage() {
         Vue d'ensemble
       </h1>
 
-      {/* Cartes de stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-white border border-gray-200 rounded-xl p-5">
           <p className="text-sm text-gray-500 mb-1">Projets actifs</p>
@@ -65,7 +61,6 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Projets récents */}
       <div className="bg-white border border-gray-200 rounded-xl p-5">
         <h2 className="text-base font-medium text-gray-900 mb-4">
           Projets récents
@@ -80,7 +75,7 @@ export default async function DashboardPage() {
               <Link
                 key={project.id}
                 href={`/dashboard/projects/${project.id}`}
-                className="bg-white border border-gray-200 rounded-xl p-5 hover:border-teal-300 transition-colors block"
+                className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0 hover:text-teal-600 transition-colors"
               >
                 <div>
                   <p className="text-sm font-medium text-gray-900">
