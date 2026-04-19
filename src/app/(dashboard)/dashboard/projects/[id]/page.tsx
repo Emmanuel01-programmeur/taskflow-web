@@ -6,9 +6,30 @@ import { supabase } from '@/lib/supabase'
 import { Task, Project } from '@/types'
 
 const COLUMNS = [
-  { id: 'todo', label: 'À faire' },
-  { id: 'in_progress', label: 'En cours' },
-  { id: 'done', label: 'Terminé' },
+  {
+    id: 'todo',
+    label: 'À faire',
+    bg: 'bg-gray-50',
+    headerBg: 'bg-gray-200',
+    headerText: 'text-gray-600',
+    cardBorder: 'border-gray-200'
+  },
+  {
+    id: 'in_progress',
+    label: 'En cours',
+    bg: 'bg-amber-50',
+    headerBg: 'bg-amber-200',
+    headerText: 'text-amber-800',
+    cardBorder: 'border-amber-200'
+  },
+  {
+    id: 'done',
+    label: 'Terminé',
+    bg: 'bg-teal-50',
+    headerBg: 'bg-teal-200',
+    headerText: 'text-teal-800',
+    cardBorder: 'border-teal-200'
+  },
 ] as const
 
 export default function ProjectDetailPage() {
@@ -166,12 +187,12 @@ export default function ProjectDetailPage() {
           const columnTasks = tasks.filter(t => t.status === column.id)
 
           return (
-            <div key={column.id} className="bg-gray-50 rounded-xl p-4">
+            <div key={column.id} className={`${column.bg} rounded-xl p-4`}>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-medium text-gray-700">
                   {column.label}
                 </h2>
-                <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+                <span className={`text-xs ${column.headerBg} ${column.headerText} px-2 py-0.5 rounded-full`}>
                   {columnTasks.length}
                 </span>
               </div>
@@ -185,7 +206,7 @@ export default function ProjectDetailPage() {
                 {columnTasks.map((task) => (
                   <div
                     key={task.id}
-                    className="bg-white border border-gray-200 rounded-lg p-3"
+                    className={`bg-white border ${column.cardBorder} rounded-lg p-3`}
                   >
                     <p className="text-sm text-gray-900 mb-2">{task.title}</p>
 

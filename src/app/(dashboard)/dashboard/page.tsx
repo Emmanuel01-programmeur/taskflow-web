@@ -34,6 +34,18 @@ export default async function DashboardPage() {
   const doneTasks = tasks?.filter(t => t.status === 'done') || []
   const recentProjects = projects?.slice(0, 3) || []
 
+  const statusColors = {
+    active: 'bg-teal-50 text-teal-700',
+    completed: 'bg-teal-100 text-teal-800',
+    archived: 'bg-gray-100 text-gray-500'
+  }
+
+  const statusLabels = {
+    active: 'Actif',
+    completed: 'Terminé',
+    archived: 'Archivé'
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-semibold text-gray-900 mb-6">
@@ -41,21 +53,21 @@ export default async function DashboardPage() {
       </h1>
 
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <p className="text-sm text-gray-500 mb-1">Projets actifs</p>
-          <p className="text-3xl font-semibold text-gray-900">
+        <div className="bg-teal-50 border border-teal-100 rounded-xl p-5">
+          <p className="text-sm text-teal-600 mb-1">Projets actifs</p>
+          <p className="text-3xl font-semibold text-teal-700">
             {activeProjects.length}
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <p className="text-sm text-gray-500 mb-1">Tâches en cours</p>
-          <p className="text-3xl font-semibold text-gray-900">
+        <div className="bg-amber-50 border border-amber-100 rounded-xl p-5">
+          <p className="text-sm text-amber-600 mb-1">Tâches en cours</p>
+          <p className="text-3xl font-semibold text-amber-700">
             {inProgressTasks.length}
           </p>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <p className="text-sm text-gray-500 mb-1">Tâches terminées</p>
-          <p className="text-3xl font-semibold text-gray-900">
+        <div className="bg-green-50 border border-green-100 rounded-xl p-5">
+          <p className="text-sm text-green-600 mb-1">Tâches terminées</p>
+          <p className="text-3xl font-semibold text-green-700">
             {doneTasks.length}
           </p>
         </div>
@@ -87,8 +99,8 @@ export default async function DashboardPage() {
                     </p>
                   )}
                 </div>
-                <span className="text-xs bg-teal-50 text-teal-700 px-2 py-1 rounded-full">
-                  {project.status}
+                <span className={`text-xs px-2 py-1 rounded-full ${statusColors[project.status as keyof typeof statusColors]}`}>
+                  {statusLabels[project.status as keyof typeof statusLabels]}
                 </span>
               </Link>
             ))}
